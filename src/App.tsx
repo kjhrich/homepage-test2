@@ -1,19 +1,91 @@
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "./App.css";
 
-type CardProps = { title: string; desc: string };
+// ✅ 지금 assets 폴더에 있는 파일명을 그대로 사용
+import img1 from "./assets/IMG_0933 2.jpg";
+import img2 from "./assets/IMG_1036.JPG";
+import img3 from "./assets/IMG_1894.jpg";
 
-function Card({ title, desc }: CardProps) {
+type Project = {
+  id: string;
+  title: string;
+  desc: string;
+  image: string;
+  tags?: string[];
+};
+
+function Modal({
+  open,
+  onClose,
+  title,
+  image,
+  desc,
+}: {
+  open: boolean;
+  onClose: () => void;
+  title: string;
+  image: string;
+  desc: string;
+}) {
+  useEffect(() => {
+    if (!open) return;
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
+
+  if (!open) return null;
+
   return (
-    <article className="card">
-      <div className="cardTitle">{title}</div>
-      <div className="cardDesc">{desc}</div>
+    <div className="modalOverlay" onMouseDown={onClose}>
+      <div className="modal" onMouseDown={(e) => e.stopPropagation()}>
+        <div className="modalHeader">
+          <div>
+            <div className="modalTitle">{title}</div>
+            <div className="modalDesc">{desc}</div>
+          </div>
+          <button className="iconBtn" onClick={onClose} aria-label="Close">
+            ✕
+          </button>
+        </div>
+
+        <div className="modalBody">
+          <img className="modalImg" src={image} alt={title} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Card({
+  project,
+  onClick,
+}: {
+  project: Project;
+  onClick: () => void;
+}) {
+  return (
+    <article className="card clickable" onClick={onClick} role="button">
+      <img className="cardImg" src={project.image} alt={project.title} />
+      <div className="cardTitle">{project.title}</div>
+      <div className="cardDesc">{project.desc}</div>
+      {project.tags?.length ? (
+        <div className="tags">
+          {project.tags.map((t) => (
+            <span className="tag" key={t}>
+              {t}
+            </span>
+          ))}
+        </div>
+      ) : null}
     </article>
   );
 }
 
 export default function App() {
-  // ✅ 텍스트는 여기만 바꾸면 됨 (태그 안 건드리기)
   const copy = {
     brand: "JUNHAK",
     pill: "⚡︎ Building in public",
@@ -26,21 +98,48 @@ export default function App() {
     aboutTitle: "About",
     aboutP1:
       "저는 만들면서 배우는 걸 좋아합니다. 이 페이지는 작업물과 생각을 정리하는 공간이에요.",
-    aboutP2: "관심 분야: (예: 디자인, 개발, AI) / 현재 목표: (예: 홈페이지 완성하기)",
+    aboutP2: "관심 분야 / 목표를 한 줄로 적어보세요.",
     projectsTitle: "Projects",
     contactTitle: "Contact",
     emailLabel: "Email:",
-    email: "kjhrich1110@gmail.com",
+    email: "your@email.com",
     linksLabel: "Links:",
     github: "GitHub",
     instagram: "Instagram",
     emailSubject: "안녕하세요 (홈페이지 통해 연락드립니다)",
   };
 
-  // ✅ 스크롤 등장 애니메이션 (섹션 보이면 visible 붙임)
+  const projects: Project[] = useMemo(
+    () => [
+      {
+        id: "p1",
+        title: "작업 1",
+        desc: "클릭하면 크게 보기",
+        image: img1,
+        tags: ["Art", "Mixed media"],
+      },
+      {
+        id: "p2",
+        title: "작업 2",
+        desc: "클릭하면 크게 보기",
+        image: img2,
+        tags: ["Design", "Poster"],
+      },
+      {
+        id: "p3",
+        title: "작업 3",
+        desc: "클릭하면 크게 보기",
+        image: img3,
+        tags: ["Sketch", "Study"],
+      },
+    ],
+    []
+  );
+
+  const [selected, setSelected] = useState<Project | null>(null);
+
   useEffect(() => {
     const sections = document.querySelectorAll<HTMLElement>(".section");
-
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((e) => {
@@ -49,12 +148,10 @@ export default function App() {
       },
       { threshold: 0.12 }
     );
-
     sections.forEach((s) => observer.observe(s));
     return () => observer.disconnect();
   }, []);
 
-  // ✅ 버튼 기능: 프로젝트 섹션으로 이동 + 잠깐 강조
   const goProjects = () => {
     const el = document.querySelector<HTMLElement>("#projects");
     el?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -62,8 +159,9 @@ export default function App() {
     window.setTimeout(() => el?.classList.remove("flash"), 700);
   };
 
-  // ✅ 버튼 기능: 메일 앱 열기 (mailto)
-  const mailtoHref = `mailto:${copy.email}?subject=${encodeURIComponent(copy.emailSubject)}`;
+  const mailtoHref = `mailto:${copy.email}?subject=${encodeURIComponent(
+    copy.emailSubject
+  )}`;
 
   return (
     <div className="app">
@@ -110,9 +208,9 @@ export default function App() {
         <section id="projects" className="section">
           <h2 className="h2">{copy.projectsTitle}</h2>
           <div className="grid">
-            <Card title="프로젝트 1" desc="한 줄 설명 (무엇을 만들었는지)" />
-            <Card title="프로젝트 2" desc="한 줄 설명 (어떤 문제를 해결했는지)" />
-            <Card title="프로젝트 3" desc="한 줄 설명 (결과/성과/배운 점)" />
+            {projects.map((p) => (
+              <Card key={p.id} project={p} onClick={() => setSelected(p)} />
+            ))}
           </div>
         </section>
 
@@ -139,6 +237,14 @@ export default function App() {
 
         <footer className="footer">© {new Date().getFullYear()} Junhak</footer>
       </main>
+
+      <Modal
+        open={!!selected}
+        onClose={() => setSelected(null)}
+        title={selected?.title ?? ""}
+        desc={selected?.desc ?? ""}
+        image={selected?.image ?? ""}
+      />
     </div>
   );
 }
