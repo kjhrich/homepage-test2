@@ -69,7 +69,7 @@ export default function App() {
             저는 만들면서 배우는 걸 좋아합니다. 이 페이지는 작업물과 생각을 정리하는
             공간이에요.
           </p>
-          <p className="muted">(여기에 한 줄 소개/관심 분야/현재 목표를 적어주세요)</p>
+          <p className="muted">()</p>
         </section>
 
         <section id="projects" className="section">
@@ -102,8 +102,8 @@ export default function App() {
           <div className="contactBox">
             <div>
               Email:{" "}
-              <a href="mailto:your@email.com" target="_blank" rel="noreferrer">
-                your@email.com
+              <a href="mailto:kjhrich1110@gmail.com" target="_blank" rel="noreferrer">
+                kjhrich1110@gmail.com
               </a>
             </div>
             <div>
@@ -116,7 +116,7 @@ export default function App() {
                 Instagram
               </a>
             </div>
-            <div className="muted">이메일/링크를 본인 걸로 바꾸면 완성.</div>
+            <div className="muted"></div>
           </div>
           <footer className="footer">© 2026 Junhak</footer>
         </section>
