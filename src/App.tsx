@@ -1,136 +1,73 @@
 import { useEffect, useMemo, useState } from "react";
 import "./App.css";
 
-// ✅ 지금 assets 폴더에 있는 파일명을 그대로 사용
-import img1 from "./assets/IMG_0933 2.jpg";
-import img2 from "./assets/IMG_1036.JPG";
-import img3 from "./assets/IMG_1894.jpg";
-
 type Project = {
   id: string;
   title: string;
   desc: string;
-  image: string;
-  tags?: string[];
+  image: string; // ✅ public 기준 URL
 };
 
 function Modal({
   open,
   onClose,
-  title,
-  image,
-  desc,
+  project,
 }: {
   open: boolean;
   onClose: () => void;
-  title: string;
-  image: string;
-  desc: string;
+  project: Project | null;
 }) {
   useEffect(() => {
     if (!open) return;
-
-    const onKey = (e: KeyboardEvent) => {
+    const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
   }, [open, onClose]);
 
-  if (!open) return null;
+  if (!open || !project) return null;
 
   return (
     <div className="modalOverlay" onMouseDown={onClose}>
       <div className="modal" onMouseDown={(e) => e.stopPropagation()}>
         <div className="modalHeader">
           <div>
-            <div className="modalTitle">{title}</div>
-            <div className="modalDesc">{desc}</div>
+            <div className="modalTitle">{project.title}</div>
+            <div className="modalDesc">{project.desc}</div>
           </div>
           <button className="iconBtn" onClick={onClose} aria-label="Close">
             ✕
           </button>
         </div>
-
         <div className="modalBody">
-          <img className="modalImg" src={image} alt={title} />
+          <img className="modalImg" src={project.image} alt={project.title} />
         </div>
       </div>
     </div>
   );
 }
 
-function Card({
-  project,
-  onClick,
-}: {
-  project: Project;
-  onClick: () => void;
-}) {
-  return (
-    <article className="card clickable" onClick={onClick} role="button">
-      <img className="cardImg" src={project.image} alt={project.title} />
-      <div className="cardTitle">{project.title}</div>
-      <div className="cardDesc">{project.desc}</div>
-      {project.tags?.length ? (
-        <div className="tags">
-          {project.tags.map((t) => (
-            <span className="tag" key={t}>
-              {t}
-            </span>
-          ))}
-        </div>
-      ) : null}
-    </article>
-  );
-}
-
 export default function App() {
-  const copy = {
-    brand: "JUNHAK",
-    pill: "⚡︎ Building in public",
-    heroTitle1: "만들고, 기록하고,",
-    heroTitle2: "보여준다.",
-    heroDesc:
-      "프로젝트를 만들고, 정리하고, 보여주는 홈페이지. 가장 기본 버전부터 빠르게 완성하고 계속 다듬어 갑니다.",
-    ctaProjects: "프로젝트 보기",
-    ctaContact: "연락하기",
-    aboutTitle: "About",
-    aboutP1:
-      "저는 만들면서 배우는 걸 좋아합니다. 이 페이지는 작업물과 생각을 정리하는 공간이에요.",
-    aboutP2: "관심 분야 / 목표를 한 줄로 적어보세요.",
-    projectsTitle: "Projects",
-    contactTitle: "Contact",
-    emailLabel: "Email:",
-    email: "your@email.com",
-    linksLabel: "Links:",
-    github: "GitHub",
-    instagram: "Instagram",
-    emailSubject: "안녕하세요 (홈페이지 통해 연락드립니다)",
-  };
-
   const projects: Project[] = useMemo(
     () => [
       {
         id: "p1",
-        title: "작업 1",
-        desc: "클릭하면 크게 보기",
-        image: img1,
-        tags: ["Art", "Mixed media"],
+        title: "프로젝트 1",
+        desc: "작업물 미리보기 (클릭하면 크게 열림)",
+        image: "/projects/project-01.jpg",
       },
       {
         id: "p2",
-        title: "작업 2",
-        desc: "클릭하면 크게 보기",
-        image: img2,
-        tags: ["Design", "Poster"],
+        title: "프로젝트 2",
+        desc: "작업물 미리보기 (클릭하면 크게 열림)",
+        image: "/projects/project-02.jpg",
       },
       {
         id: "p3",
-        title: "작업 3",
-        desc: "클릭하면 크게 보기",
-        image: img3,
-        tags: ["Sketch", "Study"],
+        title: "프로젝트 3",
+        desc: "작업물 미리보기 (클릭하면 크게 열림)",
+        image: "/projects/project-03.jpg",
       },
     ],
     []
@@ -138,99 +75,116 @@ export default function App() {
 
   const [selected, setSelected] = useState<Project | null>(null);
 
+  const goTo = (id: string) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  // 섹션 fade-in (옵션)
   useEffect(() => {
     const sections = document.querySelectorAll<HTMLElement>(".section");
-    const observer = new IntersectionObserver(
+    const obs = new IntersectionObserver(
       (entries) => {
-        entries.forEach((e) => {
-          if (e.isIntersecting) (e.target as HTMLElement).classList.add("visible");
-        });
+        entries.forEach((e) => e.isIntersecting && e.target.classList.add("visible"));
       },
       { threshold: 0.12 }
     );
-    sections.forEach((s) => observer.observe(s));
-    return () => observer.disconnect();
+    sections.forEach((s) => obs.observe(s));
+    return () => obs.disconnect();
   }, []);
-
-  const goProjects = () => {
-    const el = document.querySelector<HTMLElement>("#projects");
-    el?.scrollIntoView({ behavior: "smooth", block: "start" });
-    el?.classList.add("flash");
-    window.setTimeout(() => el?.classList.remove("flash"), 700);
-  };
-
-  const mailtoHref = `mailto:${copy.email}?subject=${encodeURIComponent(
-    copy.emailSubject
-  )}`;
 
   return (
     <div className="app">
       <header className="header">
-        <div className="brand">{copy.brand}</div>
+        <div className="brand">JUNHAK</div>
         <nav className="nav">
-          <a href="#about">About</a>
-          <a href="#projects">Projects</a>
-          <a href="#contact">Contact</a>
+          <button className="navBtn" onClick={() => goTo("projects")}>
+            Projects
+          </button>
+          <button className="navBtn" onClick={() => goTo("contact")}>
+            Contact
+          </button>
         </nav>
       </header>
 
       <main className="container">
         <section className="hero">
-          <span className="pill">{copy.pill}</span>
+          <span className="pill">⚡ Building in public</span>
 
           <h1 className="h1">
-            {copy.heroTitle1}
+            만들고, 기록하고,
             <br />
-            {copy.heroTitle2}
+            보여준다.
           </h1>
 
-          <p className="sub">{copy.heroDesc}</p>
+          <p className="sub">
+            프로젝트를 만들고, 정리하고, 보여주는 홈페이지. 가장 기본 버전부터 빠르게 완성하고 계속
+            다듬어 갑니다.
+          </p>
 
           <div className="row">
-            <button className="btnPrimary" type="button" onClick={goProjects}>
-              {copy.ctaProjects}
+            <button className="btnPrimary" onClick={() => goTo("projects")}>
+              프로젝트 보기
             </button>
 
-            <a className="btnGhost" href={mailtoHref}>
-              {copy.ctaContact}
+            <a className="btnGhost" href="mailto:your@email.com?subject=안녕하세요">
+              연락하기
             </a>
           </div>
         </section>
 
         <section id="about" className="section">
-          <h2 className="h2">{copy.aboutTitle}</h2>
-          <div className="panel">
-            <p className="p">{copy.aboutP1}</p>
-            <p className="p muted">{copy.aboutP2}</p>
-          </div>
+          <h2 className="h2">About</h2>
+          <p className="p">
+            저는 만들면서 배우는 걸 좋아합니다. 이 페이지는 작업물과 생각을 정리하는 공간이에요.
+          </p>
+          <p className="p muted">(여기에 한 줄 소개/관심 분야/현재 목표를 적어주세요)</p>
         </section>
 
         <section id="projects" className="section">
-          <h2 className="h2">{copy.projectsTitle}</h2>
+          <h2 className="h2">Projects</h2>
+
           <div className="grid">
             {projects.map((p) => (
-              <Card key={p.id} project={p} onClick={() => setSelected(p)} />
+              <article
+                key={p.id}
+                className="card clickable"
+                onClick={() => setSelected(p)}
+                role="button"
+              >
+                <img
+                  className="cardImg"
+                  src={p.image}
+                  alt={p.title}
+                  onError={(e) => {
+                    // 이미지가 안 뜰 때 바로 티 나게 처리
+                    (e.currentTarget as HTMLImageElement).style.display = "none";
+                  }}
+                />
+                <div className="cardTitle">{p.title}</div>
+                <div className="cardDesc">{p.desc}</div>
+                <div className="cardHint">클릭해서 크게 보기</div>
+              </article>
             ))}
           </div>
         </section>
 
         <section id="contact" className="section">
-          <h2 className="h2">{copy.contactTitle}</h2>
-          <div className="panel">
-            <div className="contactGrid">
-              <div>
-                {copy.emailLabel} <b>{copy.email}</b>
-              </div>
-              <div className="muted">
-                {copy.linksLabel}{" "}
-                <a href="#" onClick={(e) => e.preventDefault()}>
-                  {copy.github}
-                </a>{" "}
-                ·{" "}
-                <a href="#" onClick={(e) => e.preventDefault()}>
-                  {copy.instagram}
-                </a>
-              </div>
+          <h2 className="h2">Contact</h2>
+          <div className="contactBox">
+            <div>
+              Email: <a href="mailto:your@email.com">your@email.com</a>
+            </div>
+            <div>
+              Links:{" "}
+              <a href="https://github.com/yourname" target="_blank" rel="noreferrer">
+                GitHub
+              </a>{" "}
+              ·{" "}
+              <a href="https://instagram.com/yourname" target="_blank" rel="noreferrer">
+                Instagram
+              </a>
             </div>
           </div>
         </section>
@@ -238,13 +192,7 @@ export default function App() {
         <footer className="footer">© {new Date().getFullYear()} Junhak</footer>
       </main>
 
-      <Modal
-        open={!!selected}
-        onClose={() => setSelected(null)}
-        title={selected?.title ?? ""}
-        desc={selected?.desc ?? ""}
-        image={selected?.image ?? ""}
-      />
+      <Modal open={!!selected} onClose={() => setSelected(null)} project={selected} />
     </div>
   );
 }
